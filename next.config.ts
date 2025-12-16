@@ -7,6 +7,7 @@ const nextConfig: NextConfig = {
     unoptimized: true,
   },
   pageExtensions: ["js", "jsx", "md", "mdx", "ts", "tsx"],
+  basePath: process.env.PAGES_BASE_PATH,
 };
 
 const withMDX = createMDX({
