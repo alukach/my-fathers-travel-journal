@@ -3,7 +3,7 @@
 import { useEffect, useState, useRef, ComponentType } from "react";
 import { format, parseISO } from "date-fns";
 import Image from "next/image";
-import { EntryMetadata } from "@/app/journey/page";
+import { EntryMetadata } from "@/app/page";
 import JourneyMap from "@/components/JourneyMap";
 
 interface LoadedEntry extends EntryMetadata {
@@ -59,10 +59,7 @@ export default function JourneyViewClient({ entries }: JourneyViewClientProps) {
           return newEntries;
         });
       } catch (error) {
-        console.error(
-          `Failed to load MDX for ${entries[index].date}:`,
-          error
-        );
+        console.error(`Failed to load MDX for ${entries[index].date}:`, error);
       }
     };
 
@@ -75,18 +72,17 @@ export default function JourneyViewClient({ entries }: JourneyViewClientProps) {
   // Update trail when current date changes
   useEffect(() => {
     if (entries.length > 0 && currentDateIndex >= 0) {
-      const newTrail = entries
-        .slice(0, currentDateIndex + 1)
-        .map((entry) => ({
-          lat: entry.metadata.location.lat,
-          lng: entry.metadata.location.lng,
-        }));
+      const newTrail = entries.slice(0, currentDateIndex + 1).map((entry) => ({
+        lat: entry.metadata.location.lat,
+        lng: entry.metadata.location.lng,
+      }));
       setTrail(newTrail);
 
       // Update URL hash without triggering navigation (works with static export)
       const currentDate = entries[currentDateIndex].date;
       if (typeof window !== "undefined") {
-        window.history.replaceState(null, "", `/journey#${currentDate}`);
+        const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "";
+        window.history.replaceState(null, "", `${basePath}#${currentDate}`);
       }
     }
   }, [currentDateIndex, entries]);
@@ -128,7 +124,9 @@ export default function JourneyViewClient({ entries }: JourneyViewClientProps) {
     };
 
     const scrollContainer = document.getElementById("journal-scroll");
-    scrollContainer?.addEventListener("scroll", handleScroll, { passive: true });
+    scrollContainer?.addEventListener("scroll", handleScroll, {
+      passive: true,
+    });
 
     return () => {
       scrollContainer?.removeEventListener("scroll", handleScroll);
