@@ -195,7 +195,9 @@ export default function JourneyViewClient({ entries }: JourneyViewClientProps) {
                 <span className="px-2 md:px-3 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded-full font-medium whitespace-nowrap">
                   Day {currentDateIndex + 1}/{entries.length}
                 </span>
-                <span className="hidden md:inline text-gray-400 dark:text-gray-500">•</span>
+                <span className="hidden md:inline text-gray-400 dark:text-gray-500">
+                  •
+                </span>
                 <span className="hidden sm:inline font-medium text-gray-900 dark:text-gray-100">
                   {format(parseISO(currentEntry.date), "MMMM d, yyyy")}
                 </span>
@@ -208,14 +210,16 @@ export default function JourneyViewClient({ entries }: JourneyViewClientProps) {
               disabled={currentDateIndex === 0}
               className="flex-1 md:flex-none px-3 md:px-4 py-2 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 disabled:bg-gray-50 dark:disabled:bg-gray-900 disabled:text-gray-400 dark:disabled:text-gray-600 disabled:cursor-not-allowed rounded-md text-sm font-medium transition-colors text-gray-900 dark:text-gray-100"
             >
-              ← <span className="hidden sm:inline">Previous</span><span className="sm:hidden">Prev</span>
+              ← <span className="hidden sm:inline">Previous</span>
+              <span className="sm:hidden">Prev</span>
             </button>
             <button
               onClick={() => handleNavigate("next")}
               disabled={currentDateIndex === entries.length - 1}
               className="flex-1 md:flex-none px-3 md:px-4 py-2 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 disabled:bg-gray-50 dark:disabled:bg-gray-900 disabled:text-gray-400 dark:disabled:text-gray-600 disabled:cursor-not-allowed rounded-md text-sm font-medium transition-colors text-gray-900 dark:text-gray-100"
             >
-              <span className="hidden sm:inline">Next</span><span className="sm:hidden">Next</span> →
+              <span className="hidden sm:inline">Next</span>
+              <span className="sm:hidden">Next</span> →
             </button>
           </div>
         </div>
@@ -270,16 +274,14 @@ export default function JourneyViewClient({ entries }: JourneyViewClientProps) {
                   </div>
 
                   {/* Entry content */}
-                  <div className="bg-white dark:bg-gray-900 rounded-lg shadow-md p-4 sm:p-6 md:p-8 mb-4 md:mb-6">
-                    <div className="prose dark:prose-invert prose-sm sm:prose-base md:prose-lg max-w-none">
-                      {MDXContent ? (
-                        <MDXContent />
-                      ) : (
-                        <p className="text-gray-400 dark:text-gray-500 italic">
-                          Loading entry...
-                        </p>
-                      )}
-                    </div>
+                  <div className="prose dark:prose-invert prose-sm sm:prose-base md:prose-lg max-w-none">
+                    {MDXContent ? (
+                      <MDXContent />
+                    ) : (
+                      <p className="text-gray-400 dark:text-gray-500 italic">
+                        Loading entry...
+                      </p>
+                    )}
                   </div>
 
                   {/* Scanned image */}
