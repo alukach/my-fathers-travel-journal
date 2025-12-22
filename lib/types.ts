@@ -14,12 +14,20 @@ export interface JournalEntry {
   scanImage?: string; // Path to scanned journal entry image
 }
 
+export type TransportMode = "train" | "car" | "foot" | "ferry" | "direct";
+
+export interface RouteSegment {
+  mode: TransportMode;
+  polyline: string; // Encoded polyline string
+  from?: string; // Optional description of starting point
+  to?: string; // Optional description of destination
+}
+
 export interface JournalMetadata {
   date: string;
   title: string;
   location: Location;
   locations?: Location[];
   scanImage?: string;
-  transportMode?: "train" | "car" | "foot" | "ferry" | "direct"; // How they traveled to this location
-  route?: [number, number][]; // Pre-generated route coordinates [lng, lat]
+  segments?: RouteSegment[];
 }

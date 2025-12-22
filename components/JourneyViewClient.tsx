@@ -3,6 +3,7 @@
 import { useEffect, useState, useRef, ComponentType } from "react";
 import { format, parseISO } from "date-fns";
 import Image from "next/image";
+import polyline from "@mapbox/polyline";
 import { EntryMetadata } from "@/app/page";
 import JourneyMap from "@/components/JourneyMap";
 
@@ -18,8 +19,11 @@ export default function JourneyViewClient({ entries }: JourneyViewClientProps) {
   type TransportMode = "train" | "car" | "foot" | "ferry" | "direct";
 
   interface TrailSegment {
-    coordinates: [number, number][];
+    coordinates: [number, number][]; // [lng, lat] pairs for MapLibre
     mode: TransportMode;
+    from?: string;
+    to?: string;
+    date: string;
   }
 
   const [currentDateIndex, setCurrentDateIndex] = useState(0);
@@ -86,20 +90,20 @@ export default function JourneyViewClient({ entries }: JourneyViewClientProps) {
       for (let i = 0; i <= currentDateIndex; i++) {
         const entry = entries[i];
 
-        // Use pre-generated route if available
-        if (entry.metadata.route && entry.metadata.route.length > 0) {
-          segments.push({
-            coordinates: entry.metadata.route,
-            mode: entry.metadata.transportMode || "direct",
-          });
-        } else if (i === 0) {
-          // First entry - just add a single point
-          segments.push({
-            coordinates: [[
-              entry.metadata.location.lng,
-              entry.metadata.location.lat,
-            ]],
-            mode: "direct",
+        if (entry.metadata.segments && entry.metadata.segments.length > 0) {
+          entry.metadata.segments.forEach((segment) => {
+            // Decode polyline to coordinates
+            // Polyline returns [lat, lng] but MapLibre needs [lng, lat]
+            const latLngCoords = polyline.decode(segment.polyline);
+            const lngLatCoords = latLngCoords.map(([lat, lng]) => [lng, lat] as [number, number]);
+
+            segments.push({
+              coordinates: lngLatCoords,
+              mode: segment.mode,
+              from: segment.from,
+              to: segment.to,
+              date: entry.date,
+            });
           });
         }
       }

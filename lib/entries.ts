@@ -1,9 +1,10 @@
 import fs from "fs";
 import path from "path";
 import matter from "gray-matter";
-import { JournalMetadata } from "./types";
+import { JournalMetadata, RouteSegment } from "./types";
 
 const entriesDirectory = path.join(process.cwd(), "entries");
+const routesDirectory = path.join(process.cwd(), "lib", "routes");
 
 export function getAllEntryDates(): string[] {
   if (!fs.existsSync(entriesDirectory)) {
@@ -36,6 +37,21 @@ export function getEntryData(date: string): {
     };
   } catch {
     return null;
+  }
+}
+
+export function getRoutesForEntry(date: string): RouteSegment[] {
+  const routeFilePath = path.join(routesDirectory, `${date}.json`);
+
+  if (!fs.existsSync(routeFilePath)) {
+    return [];
+  }
+
+  try {
+    const content = fs.readFileSync(routeFilePath, "utf-8");
+    return JSON.parse(content) as RouteSegment[];
+  } catch {
+    return [];
   }
 }
 

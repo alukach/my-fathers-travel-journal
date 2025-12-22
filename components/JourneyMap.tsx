@@ -1,13 +1,15 @@
 "use client";
 
-import { useEffect, useState, useMemo, useRef } from "react";
+import { useEffect, useState, useRef } from "react";
 import Map, {
   Marker,
   Source,
   Layer,
   NavigationControl,
+  Popup,
 } from "react-map-gl/maplibre";
 import type { LayerProps, MapRef } from "react-map-gl/maplibre";
+import { format, parseISO } from "date-fns";
 import { Location } from "@/lib/types";
 import "maplibre-gl/dist/maplibre-gl.css";
 
@@ -16,6 +18,9 @@ type TransportMode = "train" | "car" | "foot" | "ferry" | "direct";
 interface TrailSegment {
   coordinates: [number, number][];
   mode: TransportMode;
+  from?: string;
+  to?: string;
+  date: string;
 }
 
 interface JourneyMapProps {
@@ -35,6 +40,13 @@ export default function JourneyMap({
     latitude: primaryLocation.lat,
     zoom: 6,
   });
+
+  // Popup state
+  const [popupInfo, setPopupInfo] = useState<{
+    segment: TrailSegment;
+    lng: number;
+    lat: number;
+  } | null>(null);
 
   // Detect dark mode
   const [isDarkMode, setIsDarkMode] = useState(false);
@@ -102,6 +114,56 @@ export default function JourneyMap({
       });
     }
   }, [primaryLocation.lng, primaryLocation.lat]);
+
+  // Set up click handlers for trail segments
+  useEffect(() => {
+    const map = mapRef.current?.getMap();
+    if (!map) return;
+
+    const handleClick = (e: any) => {
+      const features = map.queryRenderedFeatures(e.point, {
+        layers: trailSegments.map((_, index) => `trail-segment-${index}`),
+      });
+
+      if (features.length > 0) {
+        const feature = features[0];
+        const segmentIndex = parseInt(feature.layer.id.replace('trail-segment-', ''));
+        const segment = trailSegments[segmentIndex];
+
+        if (segment) {
+          setPopupInfo({
+            segment,
+            lng: e.lngLat.lng,
+            lat: e.lngLat.lat,
+          });
+        }
+      }
+    };
+
+    // Change cursor on hover
+    const handleMouseEnter = () => {
+      map.getCanvas().style.cursor = 'pointer';
+    };
+
+    const handleMouseLeave = () => {
+      map.getCanvas().style.cursor = '';
+    };
+
+    map.on('click', handleClick);
+
+    trailSegments.forEach((_, index) => {
+      map.on('mouseenter', `trail-segment-${index}`, handleMouseEnter);
+      map.on('mouseleave', `trail-segment-${index}`, handleMouseLeave);
+    });
+
+    return () => {
+      map.off('click', handleClick);
+      trailSegments.forEach((_, index) => {
+        map.off('mouseenter', `trail-segment-${index}`, handleMouseEnter);
+        map.off('mouseleave', `trail-segment-${index}`, handleMouseLeave);
+      });
+    };
+  }, [trailSegments]);
 
   // Choose map style based on dark mode
   const mapStyle = isDarkMode
@@ -203,6 +265,39 @@ export default function JourneyMap({
             </div>
           </Marker>
         ))}
+
+        {/* Popup for route segment info */}
+        {popupInfo && (
+          <Popup
+            longitude={popupInfo.lng}
+            latitude={popupInfo.lat}
+            anchor="bottom"
+            onClose={() => setPopupInfo(null)}
+            closeOnClick={false}
+            className="route-popup"
+          >
+            <div className="p-2 min-w-[200px]">
+              <div className="font-semibold text-gray-900 dark:text-gray-100 mb-2 capitalize">
+                {popupInfo.segment.mode} Journey
+              </div>
+              <div className="space-y-1 text-sm">
+                {popupInfo.segment.from && (
+                  <div className="text-gray-700 dark:text-gray-300">
+                    <span className="font-medium">From:</span> {popupInfo.segment.from}
+                  </div>
+                )}
+                {popupInfo.segment.to && (
+                  <div className="text-gray-700 dark:text-gray-300">
+                    <span className="font-medium">To:</span> {popupInfo.segment.to}
+                  </div>
+                )}
+                <div className="text-gray-600 dark:text-gray-400 text-xs pt-1 border-t border-gray-200 dark:border-gray-600 mt-1">
+                  {format(parseISO(popupInfo.segment.date), "MMMM d, yyyy")}
+                </div>
+              </div>
+            </div>
+          </Popup>
+        )}
 
       </Map>
     </div>

@@ -76,6 +76,82 @@ Watched the sunset from the Eiffel Tower...
 - **locations**: Array of additional locations visited
   - Each location has the same structure as the primary location
 - **scanImage**: Path to scanned journal image (relative to `/public`)
+- **segments**: Array of journey segments (for multi-leg journeys)
+  - **mode**: Transport mode (`"train"`, `"car"`, `"foot"`, `"ferry"`, or `"direct"`)
+  - **from**: Starting location (can be a location name or `"previous"`)
+  - **to**: Destination location (can be a location name or `"current"`)
+
+## Journey Routes and Transport Modes
+
+The app can display realistic routes on the map based on your mode of transportation. Routes are automatically generated at build time.
+
+### Single-Leg Journey
+
+For simple journeys from the previous entry to the current location, you can specify just a transport mode. The route will be automatically generated based on the previous entry's location.
+
+**Note**: This feature is currently handled by the legacy `transportMode` field, which will be migrated to the new `segments` format.
+
+### Multi-Leg Journey
+
+For journeys with multiple segments (e.g., train then ferry), use the `segments` field:
+
+```mdx
+---
+date: "1927-11-03"
+title: "Ferry to England"
+location:
+  lat: 51.2294
+  lng: 2.9267
+  name: "Ostende, Belgium"
+locations:
+  - lat: 51.1279
+    lng: 1.3134
+    name: "Dover, England"
+segments:
+  - mode: "train"
+    from: "Stockholm, Sweden"
+    to: "Ostende, Belgium"
+  - mode: "ferry"
+    from: "Ostende, Belgium"
+    to: "Dover, England"
+---
+```
+
+### Transport Modes
+
+Each mode is displayed with a different line style on the map:
+
+- **train**: Red dashed line (railroad routes)
+- **car**: Blue solid line (hitchhiking or driving)
+- **foot**: Green dotted line (walking)
+- **ferry**: Cyan longer dashes (ferry routes)
+- **direct**: Gray medium dashes (straight-line connections)
+
+### Location References
+
+In the `from` and `to` fields, you can reference locations in several ways:
+
+1. **By name**: Use the exact location name from any entry
+   - `"Stockholm, Sweden"` - references a location by its name
+   - `"Dover, England"` - references an additional location
+
+2. **By reference keywords**:
+   - `"previous"` - references the previous entry's location
+   - `"current"` - references the current entry's location
+
+3. **By coordinates**: Use `"lat,lng"` format
+   - `"51.2294, 2.9267"`
+
+### Route Generation
+
+Routes are generated at build time using the `npm run generate-routes` command, which:
+
+1. Reads all MDX entries and their segment definitions
+2. Calls routing APIs (OSRM) to get realistic routes along roads/railways
+3. Generates curved paths for ferry and direct segments
+4. Saves all routes to `lib/generated-routes.json`
+
+The generated routes are then embedded in the build and do not require runtime API calls.
 
 ## Finding Coordinates
 
@@ -215,7 +291,20 @@ When ready to deploy:
 npm run build
 ```
 
-This creates static HTML files in the `out/` directory.
+This will:
+1. Automatically run `npm run generate-routes` to create route data
+2. Build the Next.js application
+3. Create static HTML files in the `out/` directory
+
+### Manually Regenerating Routes
+
+If you want to regenerate routes without building the entire app:
+
+```bash
+npm run generate-routes
+```
+
+This is useful when you've added or modified segment definitions in your MDX entries.
 
 ## Troubleshooting
 
