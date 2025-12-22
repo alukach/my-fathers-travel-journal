@@ -184,45 +184,47 @@ export default function JourneyViewClient({ entries }: JourneyViewClientProps) {
   return (
     <div className="h-screen flex flex-col overflow-hidden">
       {/* Header */}
-      <header className="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 px-6 py-4 flex items-center justify-between z-10 shadow-sm">
-        <div className="flex items-center gap-6">
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-            Travel Journal
-          </h1>
-          {currentEntry && (
-            <div className="flex items-center gap-4 text-sm">
-              <span className="px-3 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded-full font-medium">
-                Day {currentDateIndex + 1} of {entries.length}
-              </span>
-              <span className="text-gray-400 dark:text-gray-500">•</span>
-              <span className="font-medium text-gray-900 dark:text-gray-100">
-                {format(parseISO(currentEntry.date), "MMMM d, yyyy")}
-              </span>
-            </div>
-          )}
-        </div>
-        <div className="flex gap-2">
-          <button
-            onClick={() => handleNavigate("prev")}
-            disabled={currentDateIndex === 0}
-            className="px-4 py-2 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 disabled:bg-gray-50 dark:disabled:bg-gray-900 disabled:text-gray-400 dark:disabled:text-gray-600 disabled:cursor-not-allowed rounded-md text-sm font-medium transition-colors text-gray-900 dark:text-gray-100"
-          >
-            ← Previous
-          </button>
-          <button
-            onClick={() => handleNavigate("next")}
-            disabled={currentDateIndex === entries.length - 1}
-            className="px-4 py-2 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 disabled:bg-gray-50 dark:disabled:bg-gray-900 disabled:text-gray-400 dark:disabled:text-gray-600 disabled:cursor-not-allowed rounded-md text-sm font-medium transition-colors text-gray-900 dark:text-gray-100"
-          >
-            Next →
-          </button>
+      <header className="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 px-4 md:px-6 py-3 md:py-4 z-10 shadow-sm">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 md:gap-0">
+          <div className="flex items-center gap-3 md:gap-6">
+            <h1 className="text-xl md:text-2xl font-bold text-gray-900 dark:text-gray-100">
+              Travel Journal
+            </h1>
+            {currentEntry && (
+              <div className="flex items-center gap-2 md:gap-4 text-xs md:text-sm">
+                <span className="px-2 md:px-3 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded-full font-medium whitespace-nowrap">
+                  Day {currentDateIndex + 1}/{entries.length}
+                </span>
+                <span className="hidden md:inline text-gray-400 dark:text-gray-500">•</span>
+                <span className="hidden sm:inline font-medium text-gray-900 dark:text-gray-100">
+                  {format(parseISO(currentEntry.date), "MMMM d, yyyy")}
+                </span>
+              </div>
+            )}
+          </div>
+          <div className="flex gap-2">
+            <button
+              onClick={() => handleNavigate("prev")}
+              disabled={currentDateIndex === 0}
+              className="flex-1 md:flex-none px-3 md:px-4 py-2 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 disabled:bg-gray-50 dark:disabled:bg-gray-900 disabled:text-gray-400 dark:disabled:text-gray-600 disabled:cursor-not-allowed rounded-md text-sm font-medium transition-colors text-gray-900 dark:text-gray-100"
+            >
+              ← <span className="hidden sm:inline">Previous</span><span className="sm:hidden">Prev</span>
+            </button>
+            <button
+              onClick={() => handleNavigate("next")}
+              disabled={currentDateIndex === entries.length - 1}
+              className="flex-1 md:flex-none px-3 md:px-4 py-2 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 disabled:bg-gray-50 dark:disabled:bg-gray-900 disabled:text-gray-400 dark:disabled:text-gray-600 disabled:cursor-not-allowed rounded-md text-sm font-medium transition-colors text-gray-900 dark:text-gray-100"
+            >
+              <span className="hidden sm:inline">Next</span><span className="sm:hidden">Next</span> →
+            </button>
+          </div>
         </div>
       </header>
 
       {/* Main split view */}
-      <div className="flex-1 flex overflow-hidden">
-        {/* Map side (left, 50%) */}
-        <div className="w-1/2 relative bg-gray-100 dark:bg-gray-900">
+      <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
+        {/* Map side - top on mobile, left on desktop */}
+        <div className="w-full md:w-1/2 h-64 md:h-auto relative bg-gray-100 dark:bg-gray-900 flex-shrink-0">
           {currentEntry && (
             <JourneyMap
               primaryLocation={currentEntry.metadata.location}
@@ -232,12 +234,12 @@ export default function JourneyViewClient({ entries }: JourneyViewClientProps) {
           )}
         </div>
 
-        {/* Journal side (right, 50%) */}
+        {/* Journal side - bottom on mobile, right on desktop */}
         <div
           id="journal-scroll"
-          className="w-1/2 overflow-y-auto bg-gray-50 dark:bg-gray-950"
+          className="flex-1 md:w-1/2 overflow-y-auto bg-gray-50 dark:bg-gray-950"
         >
-          <div className="max-w-3xl mx-auto px-8 py-12">
+          <div className="max-w-3xl mx-auto px-4 sm:px-6 md:px-8 py-6 md:py-12">
             {loadedEntries.map((entry, index) => {
               const MDXContent = entry.MDXContent;
               return (
@@ -253,23 +255,23 @@ export default function JourneyViewClient({ entries }: JourneyViewClientProps) {
                   }`}
                 >
                   {/* Entry header */}
-                  <div className="mb-6">
-                    <div className="text-sm text-gray-500 dark:text-gray-400 mb-2">
+                  <div className="mb-4 md:mb-6">
+                    <div className="text-xs md:text-sm text-gray-500 dark:text-gray-400 mb-2">
                       {format(parseISO(entry.date), "EEEE, MMMM d, yyyy")} • Day{" "}
                       {index + 1}
                     </div>
-                    <h2 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">
+                    <h2 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">
                       {entry.metadata.title}
                     </h2>
-                    <div className="text-gray-600 dark:text-gray-400">
+                    <div className="text-sm md:text-base text-gray-600 dark:text-gray-400">
                       {entry.metadata.location.name ||
                         `${entry.metadata.location.lat}, ${entry.metadata.location.lng}`}
                     </div>
                   </div>
 
                   {/* Entry content */}
-                  <div className="bg-white dark:bg-gray-900 rounded-lg shadow-md p-8 mb-6">
-                    <div className="prose dark:prose-invert prose-lg max-w-none">
+                  <div className="bg-white dark:bg-gray-900 rounded-lg shadow-md p-4 sm:p-6 md:p-8 mb-4 md:mb-6">
+                    <div className="prose dark:prose-invert prose-sm sm:prose-base md:prose-lg max-w-none">
                       {MDXContent ? (
                         <MDXContent />
                       ) : (
