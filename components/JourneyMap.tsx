@@ -11,16 +11,23 @@ import type { LayerProps, MapRef } from "react-map-gl/maplibre";
 import { Location } from "@/lib/types";
 import "maplibre-gl/dist/maplibre-gl.css";
 
+type TransportMode = "train" | "car" | "foot" | "ferry" | "direct";
+
+interface TrailSegment {
+  coordinates: [number, number][];
+  mode: TransportMode;
+}
+
 interface JourneyMapProps {
   primaryLocation: Location;
   additionalLocations?: Location[];
-  trail?: { lat: number; lng: number }[];
+  trailSegments?: TrailSegment[];
 }
 
 export default function JourneyMap({
   primaryLocation,
   additionalLocations = [],
-  trail = [],
+  trailSegments = [],
 }: JourneyMapProps) {
   const mapRef = useRef<MapRef>(null);
   const [viewState, setViewState] = useState({
@@ -48,33 +55,41 @@ export default function JourneyMap({
     return () => mediaQuery.removeEventListener("change", handler);
   }, []);
 
-  // Create GeoJSON for the trail line
-  const trailGeoJSON = useMemo(() => {
-    if (trail.length < 2) return null;
-
-    return {
-      type: "Feature" as const,
-      properties: {},
-      geometry: {
-        type: "LineString" as const,
-        coordinates: trail.map((point) => [point.lng, point.lat]),
-      },
-    };
-  }, [trail]);
-
-  // Line layer style for the trail
-  const lineLayer: LayerProps = {
-    id: "trail-line",
-    type: "line",
-    paint: {
-      "line-color": "#3b82f6",
-      "line-width": 3,
-      "line-opacity": 0.8,
-    },
-    layout: {
-      "line-cap": "round",
-      "line-join": "round",
-    },
+  // Style configuration for different transport modes
+  const getModeStyle = (mode: TransportMode) => {
+    switch (mode) {
+      case "train":
+        return {
+          color: "#ef4444", // red
+          width: 3,
+          dashArray: [2, 2], // dashed line for trains
+        };
+      case "car":
+        return {
+          color: "#3b82f6", // blue
+          width: 3,
+          dashArray: undefined, // solid line for cars/hitchhiking
+        };
+      case "foot":
+        return {
+          color: "#10b981", // green
+          width: 2,
+          dashArray: [1, 3], // dotted line for walking
+        };
+      case "ferry":
+        return {
+          color: "#06b6d4", // cyan
+          width: 3,
+          dashArray: [6, 3], // longer dashes for ferry
+        };
+      case "direct":
+      default:
+        return {
+          color: "#9ca3af", // gray
+          width: 2,
+          dashArray: [4, 4], // medium dashes for direct
+        };
+    }
   };
 
   // Handle primary location changes with smooth flyTo animation
@@ -104,12 +119,45 @@ export default function JourneyMap({
       >
         <NavigationControl position="top-right" />
 
-        {/* Trail line */}
-        {trailGeoJSON && (
-          <Source id="trail-source" type="geojson" data={trailGeoJSON}>
-            <Layer {...lineLayer} />
-          </Source>
-        )}
+        {/* Trail segments with different styles per transport mode */}
+        {trailSegments.map((segment, index) => {
+          if (segment.coordinates.length < 2) return null;
+
+          const style = getModeStyle(segment.mode);
+          const geojson = {
+            type: "Feature" as const,
+            properties: {},
+            geometry: {
+              type: "LineString" as const,
+              coordinates: segment.coordinates,
+            },
+          };
+
+          const layerStyle: LayerProps = {
+            id: `trail-segment-${index}`,
+            type: "line",
+            paint: {
+              "line-color": style.color,
+              "line-width": style.width,
+              "line-opacity": 0.8,
+            },
+            layout: {
+              "line-cap": "round",
+              "line-join": "round",
+            },
+          };
+
+          // Add dash array if defined
+          if (style.dashArray) {
+            layerStyle.paint!["line-dasharray"] = style.dashArray;
+          }
+
+          return (
+            <Source key={`segment-${index}`} id={`trail-segment-${index}`} type="geojson" data={geojson}>
+              <Layer {...layerStyle} />
+            </Source>
+          );
+        })}
 
         {/* Primary location marker */}
         <Marker
@@ -156,17 +204,6 @@ export default function JourneyMap({
           </Marker>
         ))}
 
-        {/* Trail markers (small dots) */}
-        {trail.slice(0, -1).map((point, index) => (
-          <Marker
-            key={`trail-${index}`}
-            longitude={point.lng}
-            latitude={point.lat}
-            anchor="center"
-          >
-            <div className="w-2 h-2 bg-blue-400 rounded-full border border-white" />
-          </Marker>
-        ))}
       </Map>
     </div>
   );

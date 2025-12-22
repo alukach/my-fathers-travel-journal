@@ -15,9 +15,16 @@ interface JourneyViewClientProps {
 }
 
 export default function JourneyViewClient({ entries }: JourneyViewClientProps) {
+  type TransportMode = "train" | "car" | "foot" | "ferry" | "direct";
+
+  interface TrailSegment {
+    coordinates: [number, number][];
+    mode: TransportMode;
+  }
+
   const [currentDateIndex, setCurrentDateIndex] = useState(0);
   const [isInitialized, setIsInitialized] = useState(false);
-  const [trail, setTrail] = useState<{ lat: number; lng: number }[]>([]);
+  const [trailSegments, setTrailSegments] = useState<TrailSegment[]>([]);
   const [loadedEntries, setLoadedEntries] = useState<LoadedEntry[]>(entries);
   const contentRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
   const isScrollingProgrammatically = useRef(false);
@@ -69,21 +76,44 @@ export default function JourneyViewClient({ entries }: JourneyViewClientProps) {
     loadMDXForEntry(currentDateIndex + 1);
   }, [currentDateIndex, entries, loadedEntries]);
 
-  // Update trail when current date changes
+  // Update trail when current date changes - using pre-generated routes
   useEffect(() => {
-    if (entries.length > 0 && currentDateIndex >= 0) {
-      const newTrail = entries.slice(0, currentDateIndex + 1).map((entry) => ({
-        lat: entry.metadata.location.lat,
-        lng: entry.metadata.location.lng,
-      }));
-      setTrail(newTrail);
+    if (entries.length === 0 || currentDateIndex < 0) return;
 
-      // Update URL hash without triggering navigation (works with static export)
-      const currentDate = entries[currentDateIndex].date;
-      if (typeof window !== "undefined") {
-        const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "";
-        window.history.replaceState(null, "", `${basePath}#${currentDate}`);
+    const buildTrail = () => {
+      const segments: TrailSegment[] = [];
+
+      for (let i = 0; i <= currentDateIndex; i++) {
+        const entry = entries[i];
+
+        // Use pre-generated route if available
+        if (entry.metadata.route && entry.metadata.route.length > 0) {
+          segments.push({
+            coordinates: entry.metadata.route,
+            mode: entry.metadata.transportMode || "direct",
+          });
+        } else if (i === 0) {
+          // First entry - just add a single point
+          segments.push({
+            coordinates: [[
+              entry.metadata.location.lng,
+              entry.metadata.location.lat,
+            ]],
+            mode: "direct",
+          });
+        }
       }
+
+      setTrailSegments(segments);
+    };
+
+    buildTrail();
+
+    // Update URL hash without triggering navigation (works with static export)
+    const currentDate = entries[currentDateIndex].date;
+    if (typeof window !== "undefined") {
+      const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "";
+      window.history.replaceState(null, "", `${basePath}#${currentDate}`);
     }
   }, [currentDateIndex, entries]);
 
@@ -233,7 +263,7 @@ export default function JourneyViewClient({ entries }: JourneyViewClientProps) {
             <JourneyMap
               primaryLocation={currentEntry.metadata.location}
               additionalLocations={currentEntry.metadata.locations}
-              trail={trail}
+              trailSegments={trailSegments}
             />
           )}
         </div>

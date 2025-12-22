@@ -20,4 +20,6 @@ export interface JournalMetadata {
   location: Location;
   locations?: Location[];
   scanImage?: string;
+  transportMode?: "train" | "car" | "foot" | "ferry" | "direct"; // How they traveled to this location
+  route?: [number, number][]; // Pre-generated route coordinates [lng, lat]
 }
