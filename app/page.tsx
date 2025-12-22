@@ -1,4 +1,8 @@
-import { getAllEntryDates, getEntryData, getRoutesForEntry } from "@/lib/entries";
+import {
+  getAllEntryDates,
+  getEntryData,
+  getRoutesForEntry,
+} from "@/lib/entries";
 import JourneyViewClient from "@/components/JourneyViewClient";
 import { JournalMetadata } from "@/lib/types";
 
@@ -22,11 +26,14 @@ export default async function JourneyPage() {
         date: entry.date,
         metadata: {
           ...entry.metadata,
-          segments: generatedRoutes.length > 0 ? generatedRoutes : entry.metadata.segments,
+          segments:
+            generatedRoutes.length > 0
+              ? generatedRoutes
+              : entry.metadata.segments,
         },
       };
     })
-    .filter((entry): entry is EntryMetadata => entry !== null);
+    .filter((entry) => entry !== null);
 
   return <JourneyViewClient entries={entries} />;
 }
