@@ -1,39 +1,19 @@
-import {
-  getAllEntryDates,
-  getEntryData,
-  getRoutesForEntry,
-} from "@/lib/entries";
-import JourneyViewClient from "@/components/JourneyViewClient";
-import { JournalMetadata } from "@/lib/types";
+import { getAllEntryDates } from "@/lib/entries";
+import { redirect } from "next/navigation";
 
-export interface EntryMetadata {
-  date: string;
-  metadata: JournalMetadata;
-}
-
-export default async function JourneyPage() {
+export default async function HomePage() {
   const allDates = getAllEntryDates();
 
-  // Fetch all entry metadata (not MDX content) and merge with generated routes
-  const entries: EntryMetadata[] = allDates
-    .map((date) => {
-      const entry = getEntryData(date);
-      if (!entry) return null;
+  // Redirect to the first entry
+  if (allDates.length > 0) {
+    const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "";
+    redirect(`${basePath}/${allDates[0]}`);
+  }
 
-      const generatedRoutes = getRoutesForEntry(date);
-
-      return {
-        date: entry.date,
-        metadata: {
-          ...entry.metadata,
-          segments:
-            generatedRoutes.length > 0
-              ? generatedRoutes
-              : entry.metadata.segments,
-        },
-      };
-    })
-    .filter((entry) => entry !== null);
-
-  return <JourneyViewClient entries={entries} />;
+  // Fallback if no entries exist
+  return (
+    <div className="h-screen flex items-center justify-center">
+      <p className="text-gray-500">No journal entries found.</p>
+    </div>
+  );
 }

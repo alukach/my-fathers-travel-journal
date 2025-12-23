@@ -4,7 +4,7 @@ import { useEffect, useState, useRef, ComponentType } from "react";
 import { format, parseISO } from "date-fns";
 import Image from "next/image";
 import polyline from "@mapbox/polyline";
-import { EntryMetadata } from "@/app/page";
+import type { EntryMetadata } from "@/app/[date]/page";
 import JourneyMap from "@/components/JourneyMap";
 
 interface LoadedEntry extends EntryMetadata {
@@ -13,9 +13,13 @@ interface LoadedEntry extends EntryMetadata {
 
 interface JourneyViewClientProps {
   entries: EntryMetadata[];
+  initialDateIndex?: number;
 }
 
-export default function JourneyViewClient({ entries }: JourneyViewClientProps) {
+export default function JourneyViewClient({
+  entries,
+  initialDateIndex = 0
+}: JourneyViewClientProps) {
   type TransportMode = "train" | "car" | "foot" | "ferry" | "direct";
 
   interface TrailSegment {
@@ -26,35 +30,30 @@ export default function JourneyViewClient({ entries }: JourneyViewClientProps) {
     date: string;
   }
 
-  const [currentDateIndex, setCurrentDateIndex] = useState(0);
+  const [currentDateIndex, setCurrentDateIndex] = useState(initialDateIndex);
   const [isInitialized, setIsInitialized] = useState(false);
   const [trailSegments, setTrailSegments] = useState<TrailSegment[]>([]);
   const [loadedEntries, setLoadedEntries] = useState<LoadedEntry[]>(entries);
   const contentRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
   const isScrollingProgrammatically = useRef(false);
 
-  // Initialize from URL hash on mount (client-side only)
+  // Scroll to initial entry on mount
   useEffect(() => {
     if (typeof window === "undefined" || isInitialized) return;
 
-    const hash = window.location.hash;
-    if (hash) {
-      const dateFromHash = hash.substring(1); // Remove '#'
-      const index = entries.findIndex((e) => e.date === dateFromHash);
-      if (index !== -1) {
-        setCurrentDateIndex(index);
-
-        // Scroll to the entry after a short delay to ensure it's rendered
-        setTimeout(() => {
-          const element = contentRefs.current[dateFromHash];
-          if (element) {
-            element.scrollIntoView({ block: "center" });
-          }
-        }, 100);
+    // Scroll to the initial entry after a short delay to ensure it's rendered
+    setTimeout(() => {
+      const currentDate = entries[initialDateIndex]?.date;
+      if (currentDate) {
+        const element = contentRefs.current[currentDate];
+        if (element) {
+          element.scrollIntoView({ block: "center" });
+        }
       }
-    }
+    }, 50);
+
     setIsInitialized(true);
-  }, [entries, isInitialized]);
+  }, [entries, initialDateIndex, isInitialized]);
 
   // Load MDX content for current and nearby entries
   useEffect(() => {
@@ -126,48 +125,57 @@ export default function JourneyViewClient({ entries }: JourneyViewClientProps) {
 
     buildTrail();
 
-    // Update URL hash without triggering navigation (works with static export)
+    // Update URL when current date changes (using History API for static export)
     const currentDate = entries[currentDateIndex].date;
-    if (typeof window !== "undefined") {
+    if (typeof window !== "undefined" && isInitialized) {
       const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "";
-      window.history.replaceState(null, "", `${basePath}#${currentDate}`);
+      const newUrl = `${basePath}/${currentDate}`;
+      if (window.location.pathname !== newUrl) {
+        window.history.replaceState(null, "", newUrl);
+      }
     }
-  }, [currentDateIndex, entries]);
+  }, [currentDateIndex, entries, isInitialized]);
 
-  // Handle scroll to detect which entry is in view
+  // Handle scroll to detect which entry is in view (with debounce)
   useEffect(() => {
+    let scrollTimeout: NodeJS.Timeout;
+
     const handleScroll = () => {
       if (isScrollingProgrammatically.current) return;
 
-      const scrollContainer = document.getElementById("journal-scroll");
-      if (!scrollContainer) return;
+      // Debounce to avoid too many state updates
+      clearTimeout(scrollTimeout);
+      scrollTimeout = setTimeout(() => {
+        const scrollContainer = document.getElementById("journal-scroll");
+        if (!scrollContainer) return;
 
-      const scrollTop = scrollContainer.scrollTop;
-      const containerHeight = scrollContainer.clientHeight;
-      const scrollCenter = scrollTop + containerHeight / 2;
+        const scrollTop = scrollContainer.scrollTop;
+        const containerHeight = scrollContainer.clientHeight;
+        const scrollCenter = scrollTop + containerHeight / 2;
 
-      // Find which entry is closest to center of viewport
-      let closestIndex = 0;
-      let closestDistance = Infinity;
+        // Find which entry is closest to center of viewport
+        let closestIndex = 0;
+        let closestDistance = Infinity;
 
-      entries.forEach((entry, index) => {
-        const element = contentRefs.current[entry.date];
-        if (element) {
-          const elementTop = element.offsetTop;
-          const elementHeight = element.clientHeight;
-          const elementCenter = elementTop + elementHeight / 2;
-          const distance = Math.abs(scrollCenter - elementCenter);
+        entries.forEach((entry, index) => {
+          const element = contentRefs.current[entry.date];
+          if (element) {
+            const elementTop = element.offsetTop;
+            const elementHeight = element.clientHeight;
+            const elementCenter = elementTop + elementHeight / 2;
+            const distance = Math.abs(scrollCenter - elementCenter);
 
-          if (distance < closestDistance) {
-            closestDistance = distance;
-            closestIndex = index;
+            if (distance < closestDistance) {
+              closestDistance = distance;
+              closestIndex = index;
+            }
           }
-        }
-      });
+        });
 
-      if (closestIndex !== currentDateIndex) {
-        setCurrentDateIndex(closestIndex);
-      }
+        if (closestIndex !== currentDateIndex) {
+          setCurrentDateIndex(closestIndex);
+        }
+      }, 50);
     };
 
     const scrollContainer = document.getElementById("journal-scroll");
@@ -176,6 +184,7 @@ export default function JourneyViewClient({ entries }: JourneyViewClientProps) {
     });
 
     return () => {
+      clearTimeout(scrollTimeout);
       scrollContainer?.removeEventListener("scroll", handleScroll);
     };
   }, [entries, currentDateIndex]);
@@ -261,13 +270,12 @@ export default function JourneyViewClient({ entries }: JourneyViewClientProps) {
       <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
         {/* Map side - top on mobile, left on desktop */}
         <div className="w-full md:w-1/2 h-64 md:h-auto relative bg-gray-100 dark:bg-gray-900 flex-shrink-0">
-          {currentEntry && (
-            <JourneyMap
-              primaryLocation={currentEntry.metadata.location}
-              additionalLocations={currentEntry.metadata.pois}
-              trailSegments={trailSegments}
-            />
-          )}
+          <JourneyMap
+            key="journey-map"
+            primaryLocation={currentEntry.metadata.location}
+            additionalLocations={currentEntry.metadata.pois}
+            trailSegments={trailSegments}
+          />
         </div>
 
         {/* Journal side - bottom on mobile, right on desktop */}
