@@ -8,7 +8,7 @@ import Map, {
   NavigationControl,
   Popup,
 } from "react-map-gl/maplibre";
-import type { LayerProps, MapRef } from "react-map-gl/maplibre";
+import type { LayerProps, MapRef, MapLayerMouseEvent } from "react-map-gl/maplibre";
 import { format, parseISO } from "date-fns";
 import { Location } from "@/lib/types";
 import "maplibre-gl/dist/maplibre-gl.css";
@@ -107,20 +107,52 @@ export default function JourneyMap({
   // Handle primary location changes with smooth flyTo animation
   useEffect(() => {
     if (mapRef.current) {
-      mapRef.current.flyTo({
-        center: [primaryLocation.lng, primaryLocation.lat],
-        zoom: 13,
-        duration: 3 * 1000,
-      });
+      const map = mapRef.current;
+
+      // If there are additional locations, fit bounds to include all
+      if (additionalLocations && additionalLocations.length > 0) {
+        const allLocations = [primaryLocation, ...additionalLocations];
+
+        // Calculate bounds
+        const lngs = allLocations.map(loc => loc.lng);
+        const lats = allLocations.map(loc => loc.lat);
+        const minLng = Math.min(...lngs);
+        const maxLng = Math.max(...lngs);
+        const minLat = Math.min(...lats);
+        const maxLat = Math.max(...lats);
+
+        map.fitBounds(
+          [[minLng, minLat], [maxLng, maxLat]],
+          {
+            padding: 80,
+            duration: 3000,
+            maxZoom: 13,
+          }
+        );
+      } else {
+        // No POIs, just fly to primary location
+        map.flyTo({
+          center: [primaryLocation.lng, primaryLocation.lat],
+          zoom: 13,
+          duration: 3000,
+        });
+      }
     }
-  }, [primaryLocation.lng, primaryLocation.lat]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    primaryLocation.lng,
+    primaryLocation.lat,
+    // Use JSON string as stable dependency for additionalLocations array
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    JSON.stringify(additionalLocations?.map(loc => [loc.lng, loc.lat]))
+  ]);
 
   // Set up click handlers for trail segments
   useEffect(() => {
     const map = mapRef.current?.getMap();
     if (!map) return;
 
-    const handleClick = (e: any) => {
+    const handleClick = (e: MapLayerMouseEvent) => {
       const features = map.queryRenderedFeatures(e.point, {
         layers: trailSegments.map((_, index) => `trail-segment-${index}`),
       });
