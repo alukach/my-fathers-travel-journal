@@ -11,7 +11,10 @@ locations:
     lng: "12.5683"
     name: "Copenhagen"
     description: "Departure point"
-transportMode: "train"
+segments:
+  - mode: "train"
+    from: "previous"
+    to: "current"
 ---
 
 ## Sunday (2 weeks)

@@ -92,10 +92,15 @@ export default function JourneyViewClient({ entries }: JourneyViewClientProps) {
 
         if (entry.metadata.segments && entry.metadata.segments.length > 0) {
           entry.metadata.segments.forEach((segment) => {
+            // Skip segments without polyline data (e.g., same start/end location)
+            if (!segment.polyline) return;
+
             // Decode polyline to coordinates
             // Polyline returns [lat, lng] but MapLibre needs [lng, lat]
             const latLngCoords = polyline.decode(segment.polyline);
-            const lngLatCoords = latLngCoords.map(([lat, lng]) => [lng, lat] as [number, number]);
+            const lngLatCoords = latLngCoords.map(
+              ([lat, lng]) => [lng, lat] as [number, number]
+            );
 
             segments.push({
               coordinates: lngLatCoords,
@@ -289,7 +294,7 @@ export default function JourneyViewClient({ entries }: JourneyViewClientProps) {
                   className={`mb-20 transition-all duration-300 ${
                     index === currentDateIndex
                       ? "opacity-100 scale-100"
-                      : "opacity-40 scale-95"
+                      : "opacity-20 scale-100"
                   }`}
                 >
                   {/* Entry header */}

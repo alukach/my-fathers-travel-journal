@@ -260,8 +260,8 @@ async function main() {
 
           routeSegments.push({
             mode: segmentDef.mode,
-            from: segmentDef.from,
-            to: segmentDef.to,
+            from: startLoc.name || `${startLoc.lat}, ${startLoc.lng}`,
+            to: endLoc.name || `${endLoc.lat}, ${endLoc.lng}`,
             polyline: encodedPolyline
           });
 
