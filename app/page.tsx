@@ -6,8 +6,7 @@ export default async function HomePage() {
 
   // Redirect to the first entry
   if (allDates.length > 0) {
-    const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "";
-    redirect(`${basePath}/${allDates[0]}`);
+    redirect(`${allDates[0]}`);
   }
 
   // Fallback if no entries exist
