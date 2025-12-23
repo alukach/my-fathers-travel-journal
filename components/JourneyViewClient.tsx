@@ -43,6 +43,14 @@ export default function JourneyViewClient({ entries }: JourneyViewClientProps) {
       const index = entries.findIndex((e) => e.date === dateFromHash);
       if (index !== -1) {
         setCurrentDateIndex(index);
+
+        // Scroll to the entry after a short delay to ensure it's rendered
+        setTimeout(() => {
+          const element = contentRefs.current[dateFromHash];
+          if (element) {
+            element.scrollIntoView({ block: "center" });
+          }
+        }, 100);
       }
     }
     setIsInitialized(true);
@@ -172,21 +180,6 @@ export default function JourneyViewClient({ entries }: JourneyViewClientProps) {
     };
   }, [entries, currentDateIndex]);
 
-  // Scroll to current entry on mount after initialization
-  useEffect(() => {
-    if (!isInitialized) return;
-
-    const targetDate = entries[currentDateIndex]?.date;
-    if (targetDate) {
-      const element = contentRefs.current[targetDate];
-      if (element) {
-        setTimeout(() => {
-          element.scrollIntoView({ block: "center" });
-        }, 100);
-      }
-    }
-  }, [isInitialized, entries, currentDateIndex]);
-
   const handleNavigate = (direction: "prev" | "next") => {
     const newIndex =
       direction === "prev"
@@ -271,7 +264,7 @@ export default function JourneyViewClient({ entries }: JourneyViewClientProps) {
           {currentEntry && (
             <JourneyMap
               primaryLocation={currentEntry.metadata.location}
-              additionalLocations={currentEntry.metadata.locations}
+              additionalLocations={currentEntry.metadata.pois}
               trailSegments={trailSegments}
             />
           )}
