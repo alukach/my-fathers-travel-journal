@@ -9,7 +9,7 @@ export interface JournalEntry {
   date: string; // YYYY-MM-DD format
   title: string;
   location: Location;
-  locations?: Location[]; // Additional locations visited that day
+  pois?: Location[]; // Points of interest visited that day
   content: string;
   scanImage?: string; // Path to scanned journal entry image
 }
@@ -27,7 +27,7 @@ export interface JournalMetadata {
   date: string;
   title: string;
   location: Location;
-  locations?: Location[];
+  pois?: Location[];
   scanImage?: string;
   segments?: RouteSegment[];
 }

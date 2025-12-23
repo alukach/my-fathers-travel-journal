@@ -88,8 +88,8 @@ function parseLocationRef(ref, currentEntry, previousEntry, allEntries) {
   }
 
   // Search for location name in current entry's additional locations
-  if (currentEntry.metadata.locations) {
-    const loc = currentEntry.metadata.locations.find(l => l.name === ref);
+  if (currentEntry.metadata.pois) {
+    const loc = currentEntry.metadata.pois.find(l => l.name === ref);
     if (loc) return loc;
   }
 
@@ -99,8 +99,8 @@ function parseLocationRef(ref, currentEntry, previousEntry, allEntries) {
     if (entry.metadata.location.name === ref) {
       return entry.metadata.location;
     }
-    if (entry.metadata.locations) {
-      const loc = entry.metadata.locations.find(l => l.name === ref);
+    if (entry.metadata.pois) {
+      const loc = entry.metadata.pois.find(l => l.name === ref);
       if (loc) return loc;
     }
   }
@@ -178,8 +178,8 @@ function parseMDX(content) {
     metadata.location.lat = parseFloat(metadata.location.lat);
     metadata.location.lng = parseFloat(metadata.location.lng);
   }
-  if (metadata.locations) {
-    metadata.locations = metadata.locations.map(loc => ({
+  if (metadata.pois) {
+    metadata.pois = metadata.pois.map(loc => ({
       ...loc,
       lat: parseFloat(loc.lat),
       lng: parseFloat(loc.lng),

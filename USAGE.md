@@ -25,7 +25,7 @@ location:
   lng: 2.3522
   name: "Paris, France"
   description: "The City of Light"
-locations:
+pois:
   - lat: 48.8584
     lng: 2.2945
     name: "Eiffel Tower"
@@ -103,7 +103,7 @@ location:
   lat: 51.2294
   lng: 2.9267
   name: "Ostende, Belgium"
-locations:
+pois:
   - lat: 51.1279
     lng: 1.3134
     name: "Dover, England"
@@ -155,7 +155,7 @@ The generated routes are then embedded in the build and do not require runtime A
 
 ## Finding Coordinates
 
-To find latitude and longitude for locations:
+To find latitude and longitude for pois:
 
 1. **Google Maps**: Right-click on a location → Click the coordinates
 2. **OpenStreetMap**: Click on a location → See coordinates in the URL
@@ -227,7 +227,7 @@ location:
   lng: 7.6357
   name: "Interlaken, Switzerland"
   description: "Gateway to the Alps"
-locations:
+pois:
   - lat: 46.5858
     lng: 7.9741
     name: "Jungfraujoch"

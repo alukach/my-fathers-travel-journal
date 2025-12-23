@@ -49,7 +49,7 @@ location:
   lng: 2.3522
   name: "Location Name"
   description: "Brief description"
-locations:
+pois:
   - lat: 48.8584
     lng: 2.2945
     name: "Place Visited"
