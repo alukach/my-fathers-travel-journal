@@ -16,9 +16,28 @@ interface JourneyViewClientProps {
   initialDateIndex?: number;
 }
 
+function ScanImage({ date, title }: { date: string; title: string }) {
+  const [imageExists, setImageExists] = useState(true);
+  const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "";
+  const imagePath = `${basePath}/scans/${date}.webp`;
+
+  if (!imageExists) return null;
+
+  return (
+    <Image
+      src={imagePath}
+      alt={`Journal scan for ${title}`}
+      width={800}
+      height={1000}
+      className="w-full h-auto rounded"
+      onError={() => setImageExists(false)}
+    />
+  );
+}
+
 export default function JourneyViewClient({
   entries,
-  initialDateIndex = 0
+  initialDateIndex = 0,
 }: JourneyViewClientProps) {
   type TransportMode = "train" | "car" | "foot" | "ferry" | "direct";
 
@@ -324,21 +343,8 @@ export default function JourneyViewClient({
                     )}
                   </div>
 
-                  {/* Scanned image */}
-                  {entry.metadata.scanImage && (
-                    <div className="bg-white dark:bg-gray-900 rounded-lg shadow-md p-4">
-                      <h3 className="text-lg font-semibold mb-3 text-gray-900 dark:text-gray-100">
-                        Original Journal Scan
-                      </h3>
-                      <Image
-                        src={entry.metadata.scanImage}
-                        alt={`Journal scan for ${entry.metadata.title}`}
-                        width={800}
-                        height={1000}
-                        className="w-full h-auto rounded"
-                      />
-                    </div>
-                  )}
+                  {/* Scanned image - auto-detect based on date */}
+                  <ScanImage date={entry.date} title={entry.metadata.title} />
                 </div>
               );
             })}
