@@ -14,7 +14,7 @@ export interface JournalEntry {
   scanImage?: string; // Path to scanned journal entry image
 }
 
-export type TransportMode = "train" | "car" | "foot" | "ferry" | "direct";
+export type TransportMode = "train" | "car" | "foot" | "ferry" | "flight" | "direct";
 
 export interface RouteSegment {
   mode: TransportMode;

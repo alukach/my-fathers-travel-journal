@@ -77,7 +77,7 @@ Watched the sunset from the Eiffel Tower...
   - Each location has the same structure as the primary location
 - **scanImage**: Path to scanned journal image (relative to `/public`)
 - **segments**: Array of journey segments (for multi-leg journeys)
-  - **mode**: Transport mode (`"train"`, `"car"`, `"foot"`, `"ferry"`, or `"direct"`)
+  - **mode**: Transport mode (`"train"`, `"car"`, `"foot"`, `"ferry"`, `"flight"`, or `"direct"`)
   - **from**: Starting location (can be a location name or `"previous"`)
   - **to**: Destination location (can be a location name or `"current"`)
 
@@ -125,6 +125,7 @@ Each mode is displayed with a different line style on the map:
 - **car**: Blue solid line (hitchhiking or driving)
 - **foot**: Green dotted line (walking)
 - **ferry**: Cyan longer dashes (ferry routes)
+- **flight**: Violet long dashes (air travel)
 - **direct**: Gray medium dashes (straight-line connections)
 
 ### Location References

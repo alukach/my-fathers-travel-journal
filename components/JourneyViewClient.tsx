@@ -39,7 +39,7 @@ export default function JourneyViewClient({
   entries,
   initialDateIndex = 0,
 }: JourneyViewClientProps) {
-  type TransportMode = "train" | "car" | "foot" | "ferry" | "direct";
+  type TransportMode = "train" | "car" | "foot" | "ferry" | "flight" | "direct";
 
   interface TrailSegment {
     coordinates: [number, number][]; // [lng, lat] pairs for MapLibre

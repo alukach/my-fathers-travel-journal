@@ -7,8 +7,8 @@ const polyline = require('@mapbox/polyline');
  * Falls back to curved line if routing fails
  */
 async function fetchRoute(start, end, mode = 'car') {
-  // For ferry and direct mode, return curved line
-  if (mode === 'ferry' || mode === 'direct') {
+  // For ferry, flight, and direct mode, return curved line
+  if (['ferry', 'flight', 'direct'].includes(mode)) {
     return generateCurvedPath(start, end);
   }
 

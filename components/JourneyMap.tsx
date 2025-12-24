@@ -13,7 +13,7 @@ import { format, parseISO } from "date-fns";
 import { Location } from "@/lib/types";
 import "maplibre-gl/dist/maplibre-gl.css";
 
-type TransportMode = "train" | "car" | "foot" | "ferry" | "direct";
+type TransportMode = "train" | "car" | "foot" | "ferry" | "flight" | "direct";
 
 interface TrailSegment {
   coordinates: [number, number][];
@@ -93,6 +93,12 @@ export default function JourneyMap({
           color: "#06b6d4", // cyan
           width: 3,
           dashArray: [6, 3], // longer dashes for ferry
+        };
+      case "flight":
+        return {
+          color: "#8b5cf6", // violet
+          width: 3,
+          dashArray: [8, 4], // long dashes for flight
         };
       case "direct":
       default:
