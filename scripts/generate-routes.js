@@ -33,7 +33,7 @@ async function fetchRoute(start, end, mode = 'car') {
 }
 
 /**
- * Generate a curved path between two points (for direct/ferry routes)
+ * Generate a curved path between two points (for flight/direct routes)
  */
 function generateCurvedPath(start, end, segments = 20) {
   const points = [];
@@ -193,6 +193,14 @@ async function main() {
   const entriesDir = path.join(__dirname, '..', 'entries');
   const routesDir = path.join(__dirname, '..', 'lib', 'routes');
 
+  // Parse CLI arguments for specific dates
+  const specificDates = process.argv.slice(2).filter(arg => !arg.startsWith('--'));
+  const forceRegenerate = specificDates.length > 0;
+
+  if (forceRegenerate) {
+    console.log(`🎯 Regenerating routes for specific dates: ${specificDates.join(', ')}\n`);
+  }
+
   // Create routes directory if it doesn't exist
   if (!fs.existsSync(routesDir)) {
     fs.mkdirSync(routesDir, { recursive: true });
@@ -216,6 +224,7 @@ async function main() {
 
   let generated = 0;
   let cached = 0;
+  let skipped = 0;
 
   // Second pass: generate routes based on segment definitions
   for (let i = 0; i < allEntries.length; i++) {
@@ -224,14 +233,26 @@ async function main() {
     const date = entry.metadata.date;
     const routeFilePath = path.join(routesDir, `${date}.json`);
 
+    // If specific dates provided, skip entries not in the list
+    if (forceRegenerate && !specificDates.includes(date)) {
+      skipped++;
+      continue;
+    }
+
     console.log(`Processing ${date} - ${entry.metadata.title}`);
 
-    // Check if route file already exists
-    if (fs.existsSync(routeFilePath)) {
+    // Check if route file already exists (unless forcing regeneration)
+    if (!forceRegenerate && fs.existsSync(routeFilePath)) {
       console.log(`  ✓ Using cached route from ${date}.json`);
       cached++;
       console.log('');
       continue;
+    }
+
+    // Delete existing cache if forcing regeneration
+    if (forceRegenerate && fs.existsSync(routeFilePath)) {
+      fs.unlinkSync(routeFilePath);
+      console.log(`  🗑️  Deleted cached route`);
     }
 
     const routeSegments = [];
@@ -318,7 +339,12 @@ async function main() {
 
   console.log(`✅ Route generation complete!`);
   console.log(`   Generated: ${generated} new routes`);
-  console.log(`   Cached: ${cached} existing routes`);
+  if (!forceRegenerate) {
+    console.log(`   Cached: ${cached} existing routes`);
+  }
+  if (forceRegenerate && skipped > 0) {
+    console.log(`   Skipped: ${skipped} non-specified dates`);
+  }
   console.log(`   Routes directory: ${routesDir}`);
 }
 
